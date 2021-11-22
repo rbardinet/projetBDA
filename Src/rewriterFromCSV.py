@@ -26,6 +26,27 @@ class RewriterFromCSV(object):
 		print("returned status = ",status)
 		return status
 
+	# terme correles
+		# termes correles
+
+	def cover(self,v,R):
+
+		pass
+	def dep(self, v, vprime):
+
+		Rv = 
+		R = 
+		res = cover(vprime, Rv)/cover(vprime, R)
+		return res
+
+	def assoc(self, v, vprime):
+		val = dep(v,vprime)
+		if val <= 1 :
+			return 0
+		else:
+			res = 1 - 1/val
+			return res
+
 	def readAndRewrite(self, flight_filters= {"WeatherDelay.none": 1}):
 		"""
 		"""
