@@ -29,13 +29,15 @@ class RewriterFromCSV(object):
 	# terme correles
 		# termes correles
 
-	def cover(self,v,R):
-
-		pass
-	def dep(self, v, vprime):
-
-		Rv = 
-		R = 
+	def cover(self,vprime,R:dict)-> float:
+		count = 0
+		for key in R:
+			if key==vprime:
+				count +=1
+				val += R[key]
+		return val/count
+	
+	def dep(self, v, vprime, R={}, Rv={})-> float:
 		res = cover(vprime, Rv)/cover(vprime, R)
 		return res
 
@@ -103,6 +105,9 @@ if __name__ == "__main__":
 	 		if os.path.isfile(sys.argv[2]): 
 	 			rw : RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])
 	 			rw.readAndRewrite({"WeatherDelay.none": 1 , "Dest.big":1})
+				
+
+			
 	 		else:
 	 			print(f"Data file {sys.argv[1]} not found")
 	 	else:
