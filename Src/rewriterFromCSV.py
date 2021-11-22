@@ -5,7 +5,10 @@ import sys
 from vocabulary import *
 from flight import Flight
 
+
+
 class RewriterFromCSV(object):
+
 	def __init__(self, voc : Vocabulary, df : str) :
 		"""
 		Translate a dataFile using a given vocabulary
@@ -13,8 +16,14 @@ class RewriterFromCSV(object):
 		self.vocabulary : Vocabulary = voc
 		self.dataFile : str = df
 
+	def isValid(self, f: dict, filters: dict) -> bool:
+		status = True
+		for key in filters:
+			if f[key] != 1:
+				status = False
+		return status
 
-	def readAndRewrite(self):
+	def readAndRewrite(self, flight_filters= {"WeatherDelay.none": 1}):
 		"""
 		"""
 		line : str
@@ -24,8 +33,10 @@ class RewriterFromCSV(object):
 				rewrite_global = None
 				count = 0
 				for line in source:
+					print("line =",line)
 					line = line.strip()
 					if line != "" and line[0] != "#":
+						print("striped line = ", line)
 						f = Flight(line,self.vocabulary)
 						##Do what you need with the rewriting vector here ...
 
@@ -35,17 +46,20 @@ class RewriterFromCSV(object):
 						print("Rewritten flight :", f.rewrite())
 						print("-----------------------------")
 
-						if rewrite_global == None :
-							rewrite_global = rewrite
+						if rewrite_global == None:
+							if self.isValid(rewrite, flight_filters):
+								rewrite_global = rewrite
 
 						else:
 							for key in rewrite:
-								rewrite_global[key] += rewrite[key]
+								if self.isValid(rewrite, flight_filters):
+									rewrite_global[key] += rewrite[key]
 
 						count+=1
 				
-				for key in rewrite_global:
-					rewrite_global[key] = rewrite_global[key]/(count-1)
+				if rewrite_global != None:
+					for key in rewrite_global:
+						rewrite_global[key] = rewrite_global[key]/(count-1)
 					
 				print("Global flight atttribute sum : ", rewrite_global)
 
@@ -59,14 +73,14 @@ class RewriterFromCSV(object):
 
 
 if __name__ == "__main__":
- 	if len(sys.argv)  < 3:
+ 	if len(sys.argv) < 3:
  		print("Usage: python rewriterFromCSV.py <vocfile> <dataFile>")
  	else:
  		if os.path.isfile(sys.argv[1]): 
  			voc : Vocabulary = Vocabulary(sys.argv[1])
 	 		if os.path.isfile(sys.argv[2]): 
 	 			rw : RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])
-	 			rw.readAndRewrite()
+	 			rw.readAndRewrite({"WeatherDelay.none": 0})
 	 		else:
 	 			print(f"Data file {sys.argv[1]} not found")
 	 	else:
