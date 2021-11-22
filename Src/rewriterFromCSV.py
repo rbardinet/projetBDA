@@ -19,8 +19,11 @@ class RewriterFromCSV(object):
 	def isValid(self, f: dict, filters: dict) -> bool:
 		status = True
 		for key in filters:
-			if f[key] != 1:
+			print("current key = ",key)
+			print("current row key value =", f[key])
+			if f[key] != filters[key]:
 				status = False
+		print("returned status = ",status)
 		return status
 
 	def readAndRewrite(self, flight_filters= {"WeatherDelay.none": 1}):
@@ -48,23 +51,21 @@ class RewriterFromCSV(object):
 
 						if rewrite_global == None:
 							if self.isValid(rewrite, flight_filters):
+								count+=1
 								rewrite_global = rewrite
 
 						else:
-							for key in rewrite:
-								if self.isValid(rewrite, flight_filters):
+							if self.isValid(rewrite, flight_filters):
+								count+=1
+								for key in rewrite:
 									rewrite_global[key] += rewrite[key]
-
-						count+=1
 				
 				if rewrite_global != None:
 					for key in rewrite_global:
-						rewrite_global[key] = rewrite_global[key]/(count-1)
+						rewrite_global[key] = rewrite_global[key]/(count)
 					
 				print("Global flight atttribute sum : ", rewrite_global)
-
-
-
+				print("count =",count)
 
 
 		except:
@@ -80,7 +81,7 @@ if __name__ == "__main__":
  			voc : Vocabulary = Vocabulary(sys.argv[1])
 	 		if os.path.isfile(sys.argv[2]): 
 	 			rw : RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])
-	 			rw.readAndRewrite({"WeatherDelay.none": 0})
+	 			rw.readAndRewrite({"WeatherDelay.none": 1 , "Dest.big":1})
 	 		else:
 	 			print(f"Data file {sys.argv[1]} not found")
 	 	else:
