@@ -16,13 +16,11 @@ class RewriterFromCSV(object):
         self.dataFile: str = df
 
     def isValid(self, f: dict, filters: dict) -> bool:
+        #Returns True if the current line (in f) has an attribute(s) that matches the filters exactly
         status = True
         for key in filters:
-            # print("current key = ",key)
-            # print("current row key value =", f[key])
             if f[key] != filters[key]:
                 status = False
-        # print("returned status = ",status)
         return status
 
     def readAndRewrite(self, flight_filters={"WeatherDelay.none": 1}):
@@ -40,22 +38,15 @@ class RewriterFromCSV(object):
                 
                 for line in source:
 
-
                     if(linecount==0):
                         firstline = line
 
-                    # print("line =",line)
                     line = line.strip()
                     if line != "" and line[0] != "#":
-                        # print("striped line = ", line)
                         f = Flight(line, self.vocabulary)
                         # Do what you need with the rewriting vector here ...
 
                         rewrite = f.rewrite()
-                        # print("-----------------------------")
-                        # print(f)
-                        # print("Rewritten flight :", f.rewrite())
-                        # print("-----------------------------")
 
 
                         if self.isValid(rewrite, flight_filters):
@@ -70,18 +61,11 @@ class RewriterFromCSV(object):
                                     rewrite_global[key] += rewrite[key]
                         
                 if not hasValidated :
-                    # print(" no attribute validated for filters : ",flight_filters)
                     rewrite_global = Flight(firstline, self.vocabulary).rewrite()
                     count = 1
 
-
-                    # print("current rewrite_global = ",rewrite_global)
-
                 for key in rewrite_global:
                     rewrite_global[key] = rewrite_global[key]/(count)
-
-                # print("Global flight atttribute sum : ", rewrite_global)
-                #print("count =",count)
 
                 return rewrite_global
 
@@ -93,12 +77,10 @@ class RewriterFromCSV(object):
 if __name__ == "__main__":
 
     def cover(v, R: dict) -> float:
-        #print("in cover, v = ",v," R= ",R)
         return R[list(v.keys())[0]]
 
     def dep(v, vprime, rw, R) -> float:
         Rv = rw.readAndRewrite(v)
-        #print("Rv = ",Rv)
         coverR = cover(vprime, R)
         if coverR == 0:
             return 0
@@ -115,7 +97,6 @@ if __name__ == "__main__":
             return 1 - (1/depres)
 
     def findCorelated(rw,R,v=None):
-
         if v!=None :
             print("CORRELATING ",v.keys()," TO :")
             for key2 in R :
@@ -130,7 +111,6 @@ if __name__ == "__main__":
                 print("correlation = ",coef )
 
         else : 
-
             for key1 in R :
                 print("CORRELATING ",key1," TO :")
                 for key2 in R :
@@ -147,8 +127,8 @@ if __name__ == "__main__":
 
                     print("correlation = ",coef )
 
-    def getDistance(R,v,vprime):
 
+    def getDistance(R,v,vprime):
         if v == vprime:
             return 0
 
@@ -172,11 +152,10 @@ if __name__ == "__main__":
         else :
             #They are not the same category
             return 1
-
-        
+  
 
     def rateAtypical(R,v_key):
-
+        #Rates the atypicality of a key within the flight database
         max = 0
 
         for key in R :
@@ -189,8 +168,8 @@ if __name__ == "__main__":
         
         return max
 
-    def listAtypical(R):
 
+    def listAtypical(R):
         Atypical = {}
 
         for key in R :
@@ -205,13 +184,55 @@ if __name__ == "__main__":
         if os.path.isfile(sys.argv[1]):
             voc: Vocabulary = Vocabulary(sys.argv[1])
             if os.path.isfile(sys.argv[2]):
-                rw: RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])
+
+                if(len(sys.argv)>=4):
+
+                    if(sys.argv[3]=="etape1"):
+                        
+                        rw: RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])      
+                        R = rw.readAndRewrite()
+                        print(R)
+
+                    elif(sys.argv[3]=="etape2"):
+
+                        rw: RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])
+
+                        if(len(sys.argv)==5):
+                            filters = dict(sys.argv[4])
+
+                            R = rw.readAndRewrite(filters)
+
+                        else :
+                            R = rw.readAndRewrite()
+                        print(R)
+
+                    elif(sys.argv[3]=="etape3_Correlation"):
+
+                        if len(sys.argv) == 6:
+                            print("Selected filters = ", sys.argv[4])
+                            print("Selected value = ", sys.argv[5])
+                            filter = {}
+                            filter[str(sys.argv[4])] = float(sys.argv[5])
+                            print("filters =", filter)
+                    
+                            rw: RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])      
+                            R = rw.readAndRewrite()
+
+                            findCorelated(rw,R, filter)
+
+                        elif len(sys.argv) == 4:
+                            rw: RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])      
+                            R = rw.readAndRewrite()
+
+                            findCorelated(rw,R)
+
+                    elif(sys.argv[3]=="etape3_Atypicality"):
+                        rw: RewriterFromCSV = RewriterFromCSV(voc, sys.argv[2])      
+                        R = rw.readAndRewrite()
+                        print(listAtypical(R))
                 
-                R = rw.readAndRewrite()
-
-                #print("R = ",R)
-
-                print("Atypical ratings for each key = ",listAtypical(R))
+                else :
+                    pass
 
             else:
                 print(f"Data file {sys.argv[1]} not found")
