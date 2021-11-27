@@ -147,6 +147,58 @@ if __name__ == "__main__":
 
                     print("correlation = ",coef )
 
+    def getDistance(R,v,vprime):
+
+        if v == vprime:
+            return 0
+
+        v_arr = v.split(".")
+        vprime_arr = vprime.split(".")
+
+        if v_arr[0] == vprime_arr[0] :
+
+            #Same category so distance calculated numerically
+            #We need to look for the distance
+            categorykeys = []
+            for key in R :
+                if key.split(".")[0] == v_arr[0] :
+                    categorykeys.append(key.split(".")[1])
+            
+            index_v = categorykeys.index(v_arr[1])
+            index_vprime = categorykeys.index(vprime_arr[1])
+
+            return abs(index_v - index_vprime)/(len(categorykeys)-1)
+        
+        else :
+            #They are not the same category
+            return 1
+
+        
+
+    def rateAtypical(R,v_key):
+
+        max = 0
+
+        for key in R :
+
+            tmpmin = min(getDistance(R,key,v_key),min(cover({key:-1},R),1-cover({v_key:-1},R)))
+
+            if (tmpmin > max) :
+
+                max = tmpmin
+        
+        return max
+
+    def listAtypical(R):
+
+        Atypical = {}
+
+        for key in R :
+            Atypical[key] = rateAtypical(R,key)
+        
+        return Atypical
+
+
     if len(sys.argv) < 3:
         print("Usage: python rewriterFromCSV.py <vocfile> <dataFile>")
     else:
@@ -157,22 +209,9 @@ if __name__ == "__main__":
                 
                 R = rw.readAndRewrite()
 
-                print("R = ",R)
+                #print("R = ",R)
 
-                if len(sys.argv) == 5:
-
-                    print("Selected filters = ", sys.argv[3])
-                    print("Selected value = ", sys.argv[4])
-
-                    filter = {}
-                    filter[str(sys.argv[3])] = float(sys.argv[4])
-
-                    print("filters =", filter)
-                    
-                    findCorelated(rw,R, filter)
-                
-                else :
-                    findCorelated(rw,R)
+                print("Atypical ratings for each key = ",listAtypical(R))
 
             else:
                 print(f"Data file {sys.argv[1]} not found")
